@@ -10,7 +10,9 @@ import {
   FolderIcon,
   Sparkles,
   ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import PersonalInfoForm from "../components/PersonalInfoForm";
 
 const ResumeBuilder = () => {
   const { resumeId } = useParams;
@@ -77,14 +79,57 @@ const ResumeBuilder = () => {
                 <div></div>
                 <div className="flex items-center">
                   {activeSectionIndex !== 0 && (
-                    <button className="flex items-center gap-1 p-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"><ChevronLeft/></button>
+                    <button
+                      onClick={() =>
+                        setActiveSectionIndex((prevIndex) =>
+                          Math.max(prevIndex - 1, 0)
+                        )
+                      }
+                      className="flex items-center gap-1 p-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
+                      disabled={activeSectionIndex === 0}
+                    >
+                      <ChevronLeft className="size-4" />
+                      Previous
+                    </button>
                   )}
+                  <button
+                    onClick={() =>
+                      setActiveSectionIndex((prevIndex) =>
+                        Math.max(prevIndex + 1, sections.length - 1)
+                      )
+                    }
+                    className={`flex items-center gap-1 p-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all ${
+                      activeSectionIndex === sections.length - 1 && "opacity-50"
+                    }`}
+                    disabled={activeSectionIndex === 0}
+                  >
+                    Next <ChevronRight className="size-4" />
+                  </button>
                 </div>
+              </div>
+              {/* Form Content */}
+              <div className="space-y-6">
+                {activeSection.id === "personal" && (
+                  <PersonalInfoForm
+                    data={resumeData.personal_info}
+                    onChange={(data) =>
+                      setResumeData((prev) => ({
+                        ...prev,
+                        personal_info: data,
+                      }))
+                    }
+                    removeBackground={removeBackground}
+                    setRemoveBackground={setRemoveBackground}
+                  />
+                )}
               </div>
             </div>
           </div>
           {/* Review */}
-          <div></div>
+          <div className="lg:col-span-7 max-lg:mt-6">
+            <div>{/* buttons */}</div>
+            {/* resume preview */}
+          </div>
         </div>
       </div>
     </div>
