@@ -27,7 +27,7 @@ import ProjectForm from "../components/ProjectForm";
 import SkillsForm from "../components/SkillsForm";
 
 const ResumeBuilder = () => {
-  const { resumeId } = useParams;
+  const { resumeId } = useParams();
   const [resumeData, setResumeData] = useState({
     _id: "",
     title: "",
