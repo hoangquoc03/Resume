@@ -22,10 +22,7 @@ const connectDB = async () => {
       console.error("MongoDB connection error:", err);
     });
 
-    await mongoose.connect(`${mongodbURI}/${projectName}`, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(`${mongodbURI}/${projectName}`);
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
   }
