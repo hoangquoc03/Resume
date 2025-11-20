@@ -1,7 +1,7 @@
 import { Plus, Sparkles, X } from "lucide-react";
 import React, { useState } from "react";
 
-const SkillsForm = ({ data, onChange }) => {
+const SkillsForm = ({ data = [], onChange }) => {
   const [newSkill, setNewSkill] = useState("");
   const addSkill = () => {
     if (newSkill.trim() && !data.includes(newSkill.trim())) {

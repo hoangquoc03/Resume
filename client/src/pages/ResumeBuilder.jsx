@@ -126,7 +126,6 @@ const ResumeBuilder = () => {
       const { data } = await api.put("/api/resumes/update", formData, {
         headers: {
           Authorization: token,
-          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -276,7 +275,7 @@ const ResumeBuilder = () => {
                 )}
                 {activeSection.id === "skills" && (
                   <SkillsForm
-                    data={resumeData.skills}
+                    data={resumeData.skills || []}
                     onChange={(data) =>
                       setResumeData((prev) => ({
                         ...prev,

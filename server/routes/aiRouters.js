@@ -7,8 +7,8 @@ import {
 import protect from "../middlewares/authMiddleware.js";
 const aiRouter = express.Router();
 
-aiRouter.post("/enahnce-pro-sum", protect, enhanceProfessionalSummary);
-aiRouter.post("/enahnce-job-desc", protect, enhanceJobDescription);
+aiRouter.post("/enhance-pro-sum", protect, enhanceProfessionalSummary);
+aiRouter.post("/enhance-job-desc", protect, enhanceJobDescription);
 aiRouter.post("/upload-resume", protect, uploadResume);
 
 export default aiRouter;
