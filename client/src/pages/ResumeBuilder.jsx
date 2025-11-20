@@ -25,9 +25,12 @@ import { ExperienceForm } from "../components/ExperienceForm";
 import EducationForm from "../components/EducationForm";
 import ProjectForm from "../components/ProjectForm";
 import SkillsForm from "../components/SkillsForm";
-
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import api from "../configs/api.js";
 const ResumeBuilder = () => {
   const { resumeId } = useParams();
+  const { token } = useSelector((state) => state.auth);
   const [resumeData, setResumeData] = useState({
     _id: "",
     title: "",
@@ -42,10 +45,18 @@ const ResumeBuilder = () => {
     public: false,
   });
   const loadExistingResume = async () => {
-    const resume = dummyResumeData.find((resume) => resume._id === resumeId);
-    if (resume) {
-      setResumeData(resume);
-      document.title = resume.title;
+    try {
+      const { data } = await api.get(`/api/resumes/get/${resumeId}`, {
+        headers: {
+          Authorization: token,
+        },
+      });
+      if (data.resume) {
+        setResumeData(data.resume);
+        document.title = data.resume.title;
+      }
+    } catch (error) {
+      toast.error(error?.response?.data?.message || error.message);
     }
   };
   const [activeSectionIndex, setActiveSectionIndex] = useState(0);
@@ -63,7 +74,21 @@ const ResumeBuilder = () => {
     loadExistingResume();
   }, []);
   const changeResumeVisibility = async () => {
-    setResumeData({ ...resumeData, public: !resumeData.public });
+    try {
+      const formData = new FormData();
+      formData.append("resumeId", resumeId);
+      formData.append(
+        "resumeData",
+        JSON.stringify({ public: !resumeData.public })
+      );
+      const { data } = await api.put("/api/resumes/update", formData, {
+        headers: { Authorization: token },
+      });
+      setResumeData({ ...resumeData, public: !resumeData.public });
+      toast.success(data.message);
+    } catch (error) {
+      console.error("Error saving resume:", error);
+    }
   };
   const handleShare = () => {
     const frontendUrl = window.location.href.split("/app/")[0];
@@ -77,6 +102,41 @@ const ResumeBuilder = () => {
   const downloadResume = () => {
     window.print();
   };
+  const saveResume = async () => {
+    try {
+      let updatedResumeData = structuredClone(resumeData);
+
+      // Nếu đang upload file thì xóa image cũ trong object
+      if (resumeData.personal_info.image instanceof File) {
+        delete updatedResumeData.personal_info.image;
+      }
+
+      const formData = new FormData();
+      formData.append("resumeId", resumeId);
+      formData.append("resumeData", JSON.stringify(updatedResumeData));
+
+      if (resumeData.personal_info.image instanceof File) {
+        formData.append("image", resumeData.personal_info.image);
+      }
+
+      if (removeBackground) {
+        formData.append("removeBackground", "yes");
+      }
+
+      const { data } = await api.put("/api/resumes/update", formData, {
+        headers: {
+          Authorization: token,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      setResumeData(data.resume);
+      toast.success(data.message);
+    } catch (error) {
+      console.error("Error saving resume:", error);
+    }
+  };
+
   return (
     <div>
       <div className="max-w-7xl mx-auto px-4 py-6">
@@ -227,7 +287,12 @@ const ResumeBuilder = () => {
                   />
                 )}
               </div>
-              <button className="bg-gradient-to-br from-indigo-100 to-indigo-200 ring-indigo-300 text-indigo-600 ring hover:ring-indigo-400 transition-all rounded-md px-6 py-2 mt-6 text-sm">
+              <button
+                onClick={() => {
+                  toast.promise(saveResume, { loading: "Saving..." });
+                }}
+                className="bg-gradient-to-br from-indigo-100 to-indigo-200 ring-indigo-300 text-indigo-600 ring hover:ring-indigo-400 transition-all rounded-md px-6 py-2 mt-6 text-sm"
+              >
                 Save Changes
               </button>
             </div>

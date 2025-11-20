@@ -1,4 +1,4 @@
-import imagekit from "../config/imagekit.js";
+const imagekit = require("../config/imagekit");
 import Resume from "../models/Resume.js";
 import fs from "fs";
 
@@ -57,33 +57,51 @@ export const getPublicResumeById = async (req, res) => {
 };
 
 export const updateResume = async (req, res) => {
+  // console.log("===== UPDATE RESUME REQUEST =====");
+  // console.log("BODY RAW:", req.body);
+  // console.log("FILE:", req.file);
   try {
     const userId = req.userId;
-    const { resumeId, resumeData, removeBackground } = req.body;
     const image = req.file;
+    const resumeId = req.body.resumeId;
 
-    let resumeDataCopy = JSON.parse(resumeData);
+    if (!resumeId)
+      return res.status(400).json({ message: "resumeId is required" });
+
+    let resumeDataCopy = {};
+    if (req.body.resumeData) {
+      try {
+        resumeDataCopy = JSON.parse(req.body.resumeData);
+      } catch {
+        return res.status(400).json({ message: "Invalid resumeData JSON" });
+      }
+    }
+
+    // Upload image nếu có
     if (image) {
-      const imageBufferData = fs.createReadStream(image.path);
-      const response = await imagekit.files.upload({
-        file: fs.createReadStream("path/to/file"),
-        fileName: "file-name.jpg",
+      const uploaded = await imagekit.upload({
+        file: fs.createReadStream(image.path),
+        fileName: image.originalname,
         folder: "user-resumes",
         transformation: {
           pre:
             "w-300,h-300,fo-face,z-0.75" +
-            (removeBackground ? ",e-bgremove" : ""),
+            (req.body.removeBackground ? ",e-bgremove" : ""),
         },
       });
-      resumeDataCopy.personal_info.image = response.url;
+      resumeDataCopy.personal_info = resumeDataCopy.personal_info || {};
+      resumeDataCopy.personal_info.image = uploaded.url;
     }
-    const resume = await Resume.findByIdAndUpdate(
-      { userId, _id: resumeId },
-      resumeDataCopy,
-      { new: true }
-    );
+
+    const resume = await Resume.findOne({ userId, _id: resumeId });
+    if (!resume) return res.status(404).json({ message: "Resume not found" });
+
+    Object.assign(resume, resumeDataCopy);
+    await resume.save();
+
     return res.status(200).json({ message: "Saved successfully", resume });
   } catch (error) {
+    console.error(error);
     return res.status(400).json({ message: error.message });
   }
 };
